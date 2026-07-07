@@ -45,7 +45,7 @@ local V = {
 local setAccent_global = nil
 local setSidebarArt_global = nil
 local setPlayerESPVisual = nil
-local PlayerESP = {enabled = false, playerData = {}, conns = {}, discordText = "discord.gg/DomerHUB"}
+local PlayerESP = {enabled = false, playerData = {}, conns = {}, discordText = ""}
 local THEME_ACCENT = Color3.fromRGB(192, 192, 192)
 local THEME_ACCENT_DIM = Color3.fromRGB(125, 125, 125)
 local THEME_ACCENT_BRIGHT = Color3.fromRGB(230, 230, 230)
@@ -1459,7 +1459,7 @@ local function buildGui()
 	brandSub.Size = UDim2.new(1, 0, 0, 10)
 	brandSub.Position = UDim2.new(0, 0, 0, 34)
 	brandSub.BackgroundTransparency = 1
-	brandSub.Text = "by Daddy Domer"
+	brandSub.Text = "by Zangi Lazz"
 	brandSub.TextColor3 = Color3.fromRGB(155, 155, 155)
 	brandSub.Font = Enum.Font.Gotham
 	brandSub.TextSize = 7
