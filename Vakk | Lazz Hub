@@ -446,7 +446,7 @@ local function setupSpeedIndicator(char)
 	discordLbl.Size=UDim2.new(1,0,0,22)
 	discordLbl.Position=UDim2.new(0,0,0,0)
 	discordLbl.BackgroundTransparency=1
-	discordLbl.Text="discord.gg/DomerHUB"
+	discordLbl.Text="discord.gg/LazzHUB"
 	discordLbl.TextColor3=Color3.fromRGB(255,255,255)
 	discordLbl.Font=Enum.Font.GothamBlack;discordLbl.TextScaled=true
 	discordLbl.TextStrokeTransparency=0;discordLbl.TextStrokeColor3=Color3.fromRGB(0,0,0)
@@ -1449,7 +1449,7 @@ local function buildGui()
 	brandTitle.Size = UDim2.new(1, 0, 0, 16)
 	brandTitle.Position = UDim2.new(0, 0, 0, 0)
 	brandTitle.BackgroundTransparency = 1
-	brandTitle.Text = "Domer"
+	brandTitle.Text = "Lazz"
 	brandTitle.TextColor3 = Color3.fromRGB(255, 255, 255)
 	brandTitle.Font = Enum.Font.GothamBold
 	brandTitle.TextSize = 13
@@ -1525,7 +1525,7 @@ local function buildGui()
 	local miniBtn=Instance.new("TextButton",gui)
 	miniBtn.Size=UDim2.new(0,118,0,30);miniBtn.Position=UDim2.new(1,-144,0,26)
 	miniBtn.BackgroundColor3=Color3.fromRGB(14, 14, 14);miniBtn.BorderSizePixel=0
-	miniBtn.Text="DomerHUB";miniBtn.TextColor3=THEME_ACCENT;miniBtn.Font=Enum.Font.GothamBold;miniBtn.TextSize=12
+	miniBtn.Text="LazzHUB";miniBtn.TextColor3=THEME_ACCENT;miniBtn.Font=Enum.Font.GothamBold;miniBtn.TextSize=12
 	miniBtn.ZIndex=20;miniBtn.Visible=false
 	Instance.new("UICorner",miniBtn).CornerRadius=UDim.new(0,8)
 	local miniStroke=Instance.new("UIStroke",miniBtn);miniStroke.Color=THEME_ACCENT;miniStroke.Thickness=1.2;miniStroke.Transparency=0.4
