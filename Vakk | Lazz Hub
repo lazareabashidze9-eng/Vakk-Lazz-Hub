@@ -40,7 +40,7 @@ local V = {
 	potatoGraphicsEnabled=false, setPotatoVisual=nil, potatoConn=nil,
 	autoSaveEnabled=true, setAutoSaveVisual=nil,
 	themeAccent=nil,  -- {R,G,B} 0-1 floats; nil = default blue
-	sidebarArt="82028776918457",  -- which preset image is currently shown
+	sidebarArt="1cxV5",  -- ← NEW DEXTER IMAGE
 }
 local setAccent_global = nil
 local setSidebarArt_global = nil
@@ -62,10 +62,9 @@ local function setAccent(c)
 end
 setAccent_global = setAccent
 local SIDEBAR_ART_PRESETS = {
-	{name = "Anime", id = "82028776918457"},
-	{name = "Dark",  id = "115117078011241"},
+	{name = "Dexter", id = "1cxV5"},
 }
-local CURRENT_ART_ID = "82028776918457"
+local CURRENT_ART_ID = "1cxV5"
 local startPlayerESP, stopPlayerESP
 local unwalkSavedAnimate = nil
 local _anyKeyListening = false
@@ -217,7 +216,6 @@ local function findNearestPrompt()
 	local c = LP.Character; if not c then return nil, math.huge end
 	local root = c:FindFirstChild("HumanoidRootPart"); if not root then return nil, math.huge end
 	local ct = tick()
-	-- fast path: use the cached prompt list if it's recent enough
 	if ct - Steal.promptCacheTime < PROMPT_CACHE_REFRESH and #Steal.cachedPrompts > 0 then
 		local np, nd = nil, math.huge
 		for _, data in ipairs(Steal.cachedPrompts) do
@@ -228,7 +226,6 @@ local function findNearestPrompt()
 		end
 		if np then return np, nd end
 	end
-	-- slow path: rebuild the cache by walking workspace.Plots
 	Steal.cachedPrompts = {}; Steal.promptCacheTime = ct
 	local plots = workspace:FindFirstChild("Plots"); if not plots then return nil, math.huge end
 	local np, nd = nil, math.huge
@@ -263,7 +260,6 @@ local function executeSteal(prompt)
 	if ct - lastStealTick < STEAL_COOLDOWN then return end
 	if isStealing then return end
 	if not prompt or not prompt.Parent then return end
-	-- cache callbacks ONCE per prompt
 	if not Steal.Data[prompt] then
 		Steal.Data[prompt] = {hold={}, trigger={}, ready=true}
 		pcall(function()
@@ -290,7 +286,6 @@ local function executeSteal(prompt)
 		if progressPct then progressPct.Text = math.floor(prog*100).."%" end
 	end)
 	task.spawn(function()
-		-- 3-tier fallback: getconnections → fireproximityprompt → InputHoldBegin/End
 		local ok = false
 		pcall(function()
 			if not data.useFallback and #data.hold > 0 then
@@ -441,7 +436,6 @@ local function setupSpeedIndicator(char)
 	local head=char:WaitForChild("Head",5);if not head then return end
 	local bb=Instance.new("BillboardGui",head)
 	bb.Size=UDim2.new(0,160,0,52);bb.StudsOffset=Vector3.new(0,2.5,0);bb.AlwaysOnTop=true
-	-- Discord text on TOP
 	local discordLbl=Instance.new("TextLabel",bb)
 	discordLbl.Size=UDim2.new(1,0,0,22)
 	discordLbl.Position=UDim2.new(0,0,0,0)
@@ -450,7 +444,6 @@ local function setupSpeedIndicator(char)
 	discordLbl.TextColor3=Color3.fromRGB(255,255,255)
 	discordLbl.Font=Enum.Font.GothamBlack;discordLbl.TextScaled=true
 	discordLbl.TextStrokeTransparency=0;discordLbl.TextStrokeColor3=Color3.fromRGB(0,0,0)
-	-- Speed below
 	speedLabel=Instance.new("TextLabel",bb)
 	speedLabel.Size=UDim2.new(1,0,0,28)
 	speedLabel.Position=UDim2.new(0,0,0,24)
@@ -602,8 +595,7 @@ local function stopUnwalk()
 	if c and unwalkSavedAnimate then unwalkSavedAnimate:Clone().Parent=c;unwalkSavedAnimate=nil end
 end
 -- ============================================================
--- DROP BRAINROT - ported from AdaptHub (ascend 0.2s, raycast down, snap to floor)
--- More reliable than the old fling-burst implementation
+-- DROP BRAINROT
 -- ============================================================
 local DROP_ASCEND_DURATION, DROP_ASCEND_SPEED = 0.2, 150
 local function runDrop()
@@ -620,11 +612,7 @@ local function runDrop()
 	local dc
 	dc = RunService.Heartbeat:Connect(function()
 		local r = char and char:FindFirstChild("HumanoidRootPart")
-		if not r then
-			dc:Disconnect()
-			dropActive = false
-			return
-		end
+		if not r then dc:Disconnect(); dropActive = false; return end
 		if tick() - t0 >= DROP_ASCEND_DURATION then
 			dc:Disconnect()
 			local rp = RaycastParams.new()
@@ -692,9 +680,6 @@ local function disableStretchRez()
 		workspace.CurrentCamera.FieldOfView=70
 	end
 end
--- ============================================================
--- CUSTOM FOV - user-adjustable Field of View
--- ============================================================
 local function enableCustomFov()
 	V.customFovEnabled=true
 	workspace.CurrentCamera.FieldOfView=V.customFovValue
@@ -1280,9 +1265,6 @@ local function buildGui()
 	local BG2   = Color3.fromRGB(14, 14, 14)
 	local CARD  = Color3.fromRGB(20, 20, 20)
 	local HOV   = Color3.fromRGB(50, 50, 50)
-	-- THEME_ACCENT / trackTheme / setAccent are now defined at module scope (see top of file)
-	-- Keep legacy refs working — RED/REDDIM now read current THEME at access via metatables not needed,
-	-- but the old code paths use these locals. We'll update them at theme change too.
 	local RED   = THEME_ACCENT
 	local REDDIM= THEME_ACCENT_DIM
 	local STROKE= Color3.fromRGB(80, 80, 80)
@@ -1295,16 +1277,15 @@ local function buildGui()
 	local pg=LP:FindFirstChild("PlayerGui");if pg then local o=pg:FindFirstChild("Tooze");if o then o:Destroy() end end
 	local gui=Instance.new("ScreenGui")
 	gui.Name="Tooze";gui.ResetOnSpawn=false;gui.DisplayOrder=10;gui.IgnoreGuiInset=true
-	gui.ZIndexBehavior=Enum.ZIndexBehavior.Sibling  -- Tooze FIX: per-parent stacking so nested rows/labels aren't hidden by ancestors
+	gui.ZIndexBehavior=Enum.ZIndexBehavior.Sibling
 	pcall(function() if syn and syn.protect_gui then syn.protect_gui(gui) end end)
 	if not pcall(function() gui.Parent=game:GetService("CoreGui") end) then gui.Parent=LP:WaitForChild("PlayerGui") end
 	local main=Instance.new("Frame",gui)
-	main.AnchorPoint=Vector2.new(0.5, 0.5)  -- Tooze: centered like Green Duels
-	main.Size=UDim2.new(0, 480, 0, 520)     -- 1:1 Vampire Hub frame size
+	main.AnchorPoint=Vector2.new(0.5, 0.5)
+	main.Size=UDim2.new(0, 480, 0, 520)
 	main.Position=UDim2.new(0.5, 0, 0.5, 0)
 	main.BackgroundColor3=Color3.fromRGB(0, 0, 0);main.BorderSizePixel=0;main.ClipsDescendants=true
 	Instance.new("UICorner",main).CornerRadius=UDim.new(0,30)
-	-- panelBg = full unified panel background
 	local panelBg = Instance.new("Frame", main)
 	panelBg.Name = "PanelBg"
 	panelBg.Size = UDim2.new(1, 0, 1, 0)
@@ -1339,12 +1320,9 @@ local function buildGui()
 		end)
 	end
 	drag(main)
-	-- =========================================================
-	-- SIDEBAR area (LEFT side of unified panel) — transparent, holds image+tabs+brand
-	-- =========================================================
 	local SIDEBAR_W = 195
-	local MENU_GAP = 0 -- clean split like Vampire Hub; no dark filtered gap between image and content
-	local CONTENT_OVERLAP = 8  -- small overlap — clean separation, no text covering
+	local MENU_GAP = 0
+	local CONTENT_OVERLAP = 8
 	local sidebar = Instance.new("Frame", main)
 	sidebar.Size = UDim2.new(0, SIDEBAR_W, 1, 0)
 	sidebar.Position = UDim2.new(0, 0, 0, 0)
@@ -1352,13 +1330,8 @@ local function buildGui()
 	sidebar.BorderSizePixel = 0
 	sidebar.ZIndex = 3
 	sidebar.ClipsDescendants = true
-	-- FIX: Sidebar gets its OWN UICorner matching main panel's radius (30).
-	-- In modern Roblox, ClipsDescendants + UICorner DOES clip children to the rounded shape.
-	-- The right-side rounded corners get hidden by contentArea (which overlaps from x=SIDEBAR_W-CONTENT_OVERLAP).
 	Instance.new("UICorner", sidebar).CornerRadius = UDim.new(0, 30)
 
-	-- CanvasGroup: actually clips children to UICorner shape (unlike regular Frame's ClipsDescendants).
-	-- Solid black background fills any sub-pixel gaps at the rounded corner edges.
 	local sidebarCanvas = Instance.new("CanvasGroup", sidebar)
 	sidebarCanvas.Name = "SidebarCanvas"
 	sidebarCanvas.Size = UDim2.new(1, 60, 1, 0)
@@ -1369,24 +1342,23 @@ local function buildGui()
 	sidebarCanvas.ZIndex = 1
 	Instance.new("UICorner", sidebarCanvas).CornerRadius = UDim.new(0, 30)
 
-	-- Photo inside the canvas — gets clipped to the rounded shape automatically.
 	local sidebarImg = Instance.new("ImageLabel", sidebarCanvas)
 	sidebarImg.Name = "SidebarArt"
 	sidebarImg.Size = UDim2.new(1, 0, 1, 0)
 	sidebarImg.Position = UDim2.new(0, 0, 0, 0)
 	sidebarImg.BackgroundTransparency = 1
-	sidebarImg.Image = "rbxassetid://" .. CURRENT_ART_ID
+	sidebarImg.Image = "rbxassetid://" .. CURRENT_ART_ID   -- Dexter image
 	sidebarImg.ScaleType = Enum.ScaleType.Crop
 	sidebarImg.ImageTransparency = 0
 	sidebarImg.ZIndex = 2
-	-- Function to swap the sidebar art at runtime
+
 	local function setSidebarArt(id)
 		CURRENT_ART_ID = id
 		sidebarImg.Image = "rbxassetid://" .. tostring(id)
 		V.sidebarArt = tostring(id)
 	end
 	setSidebarArt_global = setSidebarArt
-	-- Dark scrim on top of image — also inside canvas, gets clipped properly.
+
 	local sidebarScrim = Instance.new("Frame", sidebarCanvas)
 	sidebarScrim.Name = "SidebarScrim"
 	sidebarScrim.Size = UDim2.new(1, 0, 1, 0)
@@ -1395,9 +1367,7 @@ local function buildGui()
 	sidebarScrim.BackgroundTransparency = 0.92
 	sidebarScrim.BorderSizePixel = 0
 	sidebarScrim.ZIndex = 3
-	-- (no divider line — the content panel's own rounded border + lighter bg creates the visual separation)
-	local sidebarDiv = Instance.new("Frame", main); sidebarDiv.Size=UDim2.new(0,0,0,0); sidebarDiv.Visible=false; sidebarDiv.ZIndex=0
-	-- FPS/Ping at top-left of sidebar
+
 	local statsBg = Instance.new("Frame", sidebar)
 	statsBg.Size = UDim2.new(0, 96, 0, 20)
 	statsBg.Position = UDim2.new(0, 8, 0, 8)
@@ -1418,7 +1388,7 @@ local function buildGui()
 	statsLbl.ZIndex = 5
 	statsLbl.BackgroundTransparency = 1
 	trackTheme(function(c) statsLbl.TextColor3 = c end)
-	-- Small accent underline under FPS/PING so it is not floating by itself
+
 	local statsLine = Instance.new("Frame", sidebar)
 	statsLine.Size = UDim2.new(0, 42, 0, 1)
 	statsLine.Position = UDim2.new(0, 12, 0, 29)
@@ -1427,11 +1397,11 @@ local function buildGui()
 	statsLine.BorderSizePixel = 0
 	statsLine.ZIndex = 5
 	trackTheme(function(c) statsLine.BackgroundColor3 = c end)
-	-- Tab buttons container — slightly above center, moderate gap
+
 	local tabContainer = Instance.new("Frame", sidebar)
-	tabContainer.Size = UDim2.new(0, 122, 0, 226)  -- centered tab stack like the reference
+	tabContainer.Size = UDim2.new(0, 122, 0, 226)
 	tabContainer.AnchorPoint = Vector2.new(0.5, 0.5)
-	tabContainer.Position = UDim2.new(0.50, 0, 0.54, 0) -- centered in the sidebar like the reference
+	tabContainer.Position = UDim2.new(0.50, 0, 0.54, 0)
 	tabContainer.BackgroundTransparency = 1
 	tabContainer.ZIndex = 4
 	local tabLayout = Instance.new("UIListLayout", tabContainer)
@@ -1439,7 +1409,7 @@ local function buildGui()
 	tabLayout.Padding = UDim.new(0, 40)
 	tabLayout.HorizontalAlignment = Enum.HorizontalAlignment.Center
 	tabLayout.VerticalAlignment = Enum.VerticalAlignment.Center
-	-- Brand area at bottom of sidebar
+
 	local brandFrame = Instance.new("Frame", sidebar)
 	brandFrame.Size = UDim2.new(1, -24, 0, 54)
 	brandFrame.Position = UDim2.new(0, 12, 1, -58)
@@ -1473,12 +1443,10 @@ local function buildGui()
 	brandLine.ZIndex = 6
 	Instance.new("UICorner", brandLine).CornerRadius = UDim.new(1, 0)
 	trackTheme(function(c) brandLine.BackgroundColor3 = c end)
-	-- =========================================================
-	-- Right CONTENT AREA
-	-- =========================================================
+
 	local closeBtn = Instance.new("TextButton", main)
 	closeBtn.Size = UDim2.new(0, 24, 0, 24)
-	closeBtn.Position = UDim2.new(1, -34, 0, 16)  -- top-right minimize box
+	closeBtn.Position = UDim2.new(1, -34, 0, 16)
 	closeBtn.BackgroundColor3 = Color3.fromRGB(14, 14, 14)
 	closeBtn.BackgroundTransparency = 0.15
 	closeBtn.BorderSizePixel = 0
@@ -1498,7 +1466,7 @@ local function buildGui()
 		TS:Create(closeBtn,TweenInfo.new(0.1),{TextColor3=Color3.fromRGB(200,200,200),BackgroundColor3=Color3.fromRGB(14,14,14),BackgroundTransparency=0.15}):Play()
 		TS:Create(closeStroke,TweenInfo.new(0.1),{Transparency=0.45}):Play()
 	end)
-	-- FPS/Ping live update
+
 	task.spawn(function()
 		local lastFrame = tick()
 		local fpsSamples = {}; local fpsAvg = 60
@@ -1521,7 +1489,7 @@ local function buildGui()
 			task.wait(0.5)
 		end
 	end)
-	-- mini button (when GUI hidden)
+
 	local miniBtn=Instance.new("TextButton",gui)
 	miniBtn.Size=UDim2.new(0,118,0,30);miniBtn.Position=UDim2.new(1,-144,0,26)
 	miniBtn.BackgroundColor3=Color3.fromRGB(14, 14, 14);miniBtn.BorderSizePixel=0
@@ -1539,7 +1507,7 @@ local function buildGui()
 	miniBtn.MouseButton1Click:Connect(showGui)
 	local contentArea = Instance.new("Frame", main)
 	contentArea.Size = UDim2.new(1, -((SIDEBAR_W - CONTENT_OVERLAP) + MENU_GAP), 1, 0)
-	contentArea.Position = UDim2.new(0, (SIDEBAR_W - CONTENT_OVERLAP) + MENU_GAP, 0, 0)  -- right panel sits over the sidebar edge like the reference
+	contentArea.Position = UDim2.new(0, (SIDEBAR_W - CONTENT_OVERLAP) + MENU_GAP, 0, 0)
 	contentArea.BackgroundColor3 = Color3.fromRGB(38, 38, 38)
 	contentArea.BorderSizePixel = 0
 	contentArea.ClipsDescendants = true
@@ -1556,8 +1524,7 @@ local function buildGui()
 	splitCover.BackgroundColor3 = Color3.fromRGB(38, 38, 38)
 	splitCover.BorderSizePixel = 0
 	splitCover.ZIndex = 1
-	local topTabs = tabContainer  -- alias for backwards compatibility with makeTopTab
-	-- legacy table refs kept for any old callers
+	local topTabs = tabContainer
 	local tabBar = Instance.new("Frame", main)
 	tabBar.Visible = false; tabBar.Size = UDim2.new(0, 0, 0, 0); tabBar.BorderSizePixel = 0; tabBar.ZIndex = 1
 	local sf = contentArea
@@ -1568,17 +1535,14 @@ local function buildGui()
 		currentTab = name
 		for tn, pg in pairs(tabPages) do pg.Visible = (tn == name) end
 	end
-	-- pageHolder fills the contentArea (no top tab bar — tabs are in the sidebar)
 	local pageHolder = Instance.new("Frame", contentArea)
-	-- Inset the scrolling pages so the scrollbar stays inside the rounded content corners.
 	pageHolder.Size = UDim2.new(1, -10, 1, -18)
 	pageHolder.Position = UDim2.new(0, 5, 0, 9)
 	pageHolder.BackgroundTransparency = 1
 	pageHolder.BorderSizePixel = 0
 	pageHolder.ZIndex = 3
-	local topTabsLine = Instance.new("Frame", contentArea)  -- unused but kept for legacy refs
+	local topTabsLine = Instance.new("Frame", contentArea)
 	topTabsLine.Visible = false; topTabsLine.Size = UDim2.new(0, 0, 0, 0); topTabsLine.ZIndex = 1
-	-- Three pages with their own ScrollingFrames
 	local function buildPage()
 		local p = Instance.new("ScrollingFrame", pageHolder)
 		p.Size = UDim2.new(1, -2, 1, 0)
@@ -1602,14 +1566,13 @@ local function buildGui()
 	local mainPage = buildPage()
 	local otherPage = buildPage(); otherPage.Visible = false
 	local configPage = buildPage(); configPage.Visible = false
-	sf = mainPage  -- default; mkSect/mkSectMerge can override
-	-- Tab buttons
+	sf = mainPage
 	local activePage = mainPage
 	local function makeTopTab(label, idx, page)
 		local b = Instance.new("TextButton", tabContainer)
 		b.Size = UDim2.new(1, 0, 0, 43)
 		b.BackgroundColor3 = Color3.fromRGB(18, 18, 18)
-		b.BackgroundTransparency = 0.46  -- transparent dark buttons over the sidebar art
+		b.BackgroundTransparency = 0.46
 		b.BorderSizePixel = 0
 		b.Text = label:sub(1,1) .. label:sub(2):lower()
 		b.TextColor3 = Color3.fromRGB(245, 245, 245)
@@ -1659,7 +1622,7 @@ local function buildGui()
 			local isActive = (t.page == p)
 			TS:Create(t.btn, TweenInfo.new(0.22), {
 				BackgroundColor3 = isActive and ACTIVE_TAB or Color3.fromRGB(18, 18, 18),
-				BackgroundTransparency = isActive and 0 or 0.46,  -- keep selected tab grey until another tab is clicked
+				BackgroundTransparency = isActive and 0 or 0.46,
 				TextColor3 = isActive and Color3.fromRGB(0, 0, 0) or Color3.fromRGB(245, 245, 245),
 			}):Play()
 			local st = t.btn:FindFirstChildWhichIsA("UIStroke")
@@ -1671,19 +1634,15 @@ local function buildGui()
 			end
 		end
 	end
-	-- default active: Main
 	btnMain.BackgroundColor3 = ACTIVE_TAB; btnMain.BackgroundTransparency = 0; btnMain.TextColor3 = Color3.fromRGB(0, 0, 0)
 	do
 		local st = btnMain:FindFirstChildWhichIsA("UIStroke")
 		if st then st.Color = Color3.fromRGB(225, 225, 225); st.Transparency = 0.2 end
 	end
-	-- When theme changes, re-run setActivePage to refresh active tab color + strokes for all tabs
 	trackTheme(function(_) setActivePage(activePage) end)
 	btnMain.MouseButton1Click:Connect(function()   setActivePage(mainPage)   end)
 	btnOther.MouseButton1Click:Connect(function()  setActivePage(otherPage)  end)
 	btnConfig.MouseButton1Click:Connect(function() setActivePage(configPage) end)
-	-- Map sections to pages: Speed/Combat/Steal → Main; Visual → Other; Interface → Config
-	-- Vampire Hub-style sorting: MAIN = Speed/Combat/Mechanics, OTHER = Movement (TP + Auto L/R), CONFIG = Steal/Display/Interface
 	local SECTION_TO_PAGE = {
 		Speed = mainPage, ["Lagger Speed"] = mainPage, Keybinds = mainPage, Combat = mainPage, Mechanics = mainPage, Misc = mainPage,
 		Movement = otherPage, Teleport = otherPage, ["Auto Left / Right"] = otherPage, ["Desync Aimbot"] = otherPage,
@@ -1726,11 +1685,11 @@ local function buildGui()
 		trackTheme(function(c) dot.BackgroundColor3 = c end)
 	end
 	local function mkRow(h)
-		local f=Instance.new("Frame",sf);f.Size=UDim2.new(1,-2,0,h or 40)  -- 1:1 Vampire Hub row size
-		f.BackgroundColor3=Color3.fromRGB(0, 0, 0);f.BorderSizePixel=0;f.LayoutOrder=LO()  -- Vampire-style black cards
+		local f=Instance.new("Frame",sf);f.Size=UDim2.new(1,-2,0,h or 40)
+		f.BackgroundColor3=Color3.fromRGB(0, 0, 0);f.BorderSizePixel=0;f.LayoutOrder=LO()
 		f.ZIndex=6
-		Instance.new("UICorner",f).CornerRadius=UDim.new(0,10)  -- Vampire Hub rounded card
-		local rs=Instance.new("UIStroke",f); rs.Color=Color3.fromRGB(75, 75, 75); rs.Thickness=1; rs.Transparency=0.22  -- silver-grey stroke
+		Instance.new("UICorner",f).CornerRadius=UDim.new(0,10)
+		local rs=Instance.new("UIStroke",f); rs.Color=Color3.fromRGB(75, 75, 75); rs.Thickness=1; rs.Transparency=0.22
 		f.MouseEnter:Connect(function() TS:Create(f,TweenInfo.new(0.08),{BackgroundColor3=Color3.fromRGB(12, 12, 12)}):Play() end)
 		f.MouseLeave:Connect(function() TS:Create(f,TweenInfo.new(0.08),{BackgroundColor3=Color3.fromRGB(0, 0, 0)}):Play() end)
 		return f
@@ -1758,7 +1717,7 @@ local function buildGui()
 			BackgroundColor3=on and Color3.fromRGB(255,255,255) or Color3.fromRGB(130, 130, 130)
 		}):Play()
 	end
-	local _trackedPills = {}  -- {pill, dot, getState fn}
+	local _trackedPills = {}
 	trackTheme(function(_) for _,t in ipairs(_trackedPills) do if t.getState() then animPill(t.pill, t.dot, true) end end end)
 	local function mkToggle(txt,cb)
 		local row=mkRow(40);mkLabel(row,txt)
@@ -1770,7 +1729,7 @@ local function buildGui()
 		clk.Activated:Connect(function()
 			on=not on;sv(on)
 			pcall(cb, on)
-			pcall(saveConfig)  -- AUTO-SAVE every toggle change, regardless of cb
+			pcall(saveConfig)
 		end)
 		pill.ZIndex=3;dot.ZIndex=4
 		return sv
@@ -1788,7 +1747,7 @@ local function buildGui()
 		tb.FocusLost:Connect(function()
 			TS:Create(bs,TweenInfo.new(0.12),{Color=Color3.fromRGB(80, 80, 80),Transparency=0.28}):Play()
 			if cb then local n=tonumber(tb.Text);if n then cb(n) else tb.Text=tostring(default) end end
-			pcall(saveConfig)  -- AUTO-SAVE on every value commit
+			pcall(saveConfig)
 		end)
 		return tb
 	end
@@ -1813,7 +1772,7 @@ local function buildGui()
 		btn.Text=getLabel();btn.TextColor3=THEME_ACCENT
 		btn.Font=Enum.Font.GothamBold;btn.TextSize=11;btn.ZIndex=5
 		Instance.new("UICorner",btn).CornerRadius=UDim.new(0,7)
-		local kbSt=Instance.new("UIStroke",btn);kbSt.Color=Color3.fromRGB(80, 80, 80);kbSt.Thickness=1;kbSt.Transparency=0.28  -- silver-grey stroke
+		local kbSt=Instance.new("UIStroke",btn);kbSt.Color=Color3.fromRGB(80, 80, 80);kbSt.Thickness=1;kbSt.Transparency=0.28
 		local li=false;local lc;local pv=btn.Text;local listenStart=0
 		btn.Activated:Connect(function()
 			if li then li=false;_anyKeyListening=false;if lc then lc:Disconnect();lc=nil end;btn.Text=pv;btn.TextColor3=W;return end
@@ -1832,12 +1791,12 @@ local function buildGui()
 		return btn
 	end
 	local function mkToggleKB(txt,kbEntry,onToggle,onKB)
-		local row=mkRow(40);mkLabel(row,txt)  -- Tooze: 40px row
+		local row=mkRow(40);mkLabel(row,txt)
 		if kbEntry then mkKB(row,kbEntry,function(k,isGp)
 			if isGp then kbEntry.gp=k;kbEntry.kb=nil else kbEntry.kb=k;kbEntry.gp=nil end
 			if onKB then onKB(k,isGp) end
 		end) end
-		local pill,dot=mkPill(row,kbEntry and 134 or 56)  -- Tooze: pill at -134 from right when keybind (58 KB width + 12 gap + 56 = 126ish, give 134 for safety)
+		local pill,dot=mkPill(row,kbEntry and 134 or 56)
 		local on=false
 		local function sv(s) on=s;animPill(pill,dot,s) end
 		local clk=Instance.new("TextButton",pill);clk.Size=UDim2.new(1,0,1,0);clk.BackgroundTransparency=1;clk.Text="";clk.ZIndex=5
@@ -1845,14 +1804,12 @@ local function buildGui()
 		pill.ZIndex=3;dot.ZIndex=4
 		return sv
 	end
-	-- Tooze: unified progress bar — STEAL + fill + percentage live inside ONE pill (no separate chip)
 	local pbFrame=Instance.new("Frame",gui)
 	pbFrame.Size=UDim2.new(0,380,0,38);pbFrame.Position=UDim2.new(0.5,-190,1,-58)
 	pbFrame.BackgroundColor3=Color3.fromRGB(0, 0, 0);pbFrame.BorderSizePixel=0;pbFrame.Active=true;pbFrame.ClipsDescendants=true
 	Instance.new("UICorner",pbFrame).CornerRadius=UDim.new(1,0)
 	local pbSt=Instance.new("UIStroke",pbFrame); pbSt.Color=THEME_ACCENT; pbSt.Thickness=1.2; pbSt.Transparency=0.2
 	drag(pbFrame)
-	-- The unified left pill (STEAL + fill + percentage all in one element)
 	local fillRegion = Instance.new("Frame", pbFrame)
 	fillRegion.Size = UDim2.new(0, 220, 1, -8)
 	fillRegion.Position = UDim2.new(0, 5, 0, 4)
@@ -1861,14 +1818,12 @@ local function buildGui()
 	fillRegion.ClipsDescendants = true
 	fillRegion.ZIndex = 2
 	Instance.new("UICorner", fillRegion).CornerRadius = UDim.new(1, 0)
-	-- subtle vertical gradient on the dark track for depth
 	local fillRegGradient = Instance.new("UIGradient", fillRegion)
 	fillRegGradient.Color = ColorSequence.new(Color3.fromRGB(30, 30, 30), Color3.fromRGB(14, 14, 14))
 	fillRegGradient.Rotation = 90
 	local fillRegStroke = Instance.new("UIStroke", fillRegion)
 	fillRegStroke.Color = THEME_ACCENT; fillRegStroke.Thickness = 1; fillRegStroke.Transparency = 0.6
 	trackTheme(function(c) fillRegStroke.Color = c end)
-	-- The fill: grows from left, colored with a vertical gradient for a premium look
 	progressFill=Instance.new("Frame",fillRegion)
 	progressFill.Size=UDim2.new(0,0,1,0);progressFill.Position=UDim2.new(0,0,0,0)
 	progressFill.BackgroundColor3=THEME_ACCENT;progressFill.BorderSizePixel=0
@@ -1881,7 +1836,6 @@ local function buildGui()
 		progressFill.BackgroundColor3 = c
 		fillGradient.Color = ColorSequence.new(THEME_ACCENT_BRIGHT, THEME_ACCENT_DIM)
 	end)
-	-- STEAL text overlaid on the LEFT of fillRegion (always visible)
 	local stealLbl = Instance.new("TextLabel", fillRegion)
 	stealLbl.Size = UDim2.new(0, 60, 1, 0)
 	stealLbl.Position = UDim2.new(0, 12, 0, 0)
@@ -1892,14 +1846,12 @@ local function buildGui()
 	stealLbl.TextSize = 11
 	stealLbl.TextXAlignment = Enum.TextXAlignment.Left
 	stealLbl.ZIndex = 5
-	-- percentage/distance text on the RIGHT of fillRegion (always visible)
 	progressPct=Instance.new("TextLabel",fillRegion)
 	progressPct.Size=UDim2.new(0,60,1,0);progressPct.Position=UDim2.new(1,-68,0,0)
 	progressPct.BackgroundTransparency=1;progressPct.Text="—";progressPct.TextColor3=Color3.fromRGB(230, 230, 230)
 	progressPct.Font=Enum.Font.GothamBold;progressPct.TextSize=10
 	progressPct.TextXAlignment=Enum.TextXAlignment.Right
 	progressPct.ZIndex=5
-	-- vertical divider
 	local pbDiv = Instance.new("Frame", pbFrame)
 	pbDiv.Size = UDim2.new(0, 1, 0, 14)
 	pbDiv.Position = UDim2.new(0, 232, 0.5, -7)
@@ -1908,15 +1860,12 @@ local function buildGui()
 	pbDiv.BorderSizePixel = 0
 	pbDiv.ZIndex = 3
 	trackTheme(function(c) pbDiv.BackgroundColor3 = c end)
-	-- FPS · PING info on the right (now occupies the full right area)
 	progressRadLbl=Instance.new("TextLabel",pbFrame)
 	progressRadLbl.Size=UDim2.new(0,140,1,0);progressRadLbl.Position=UDim2.new(0,236,0,0)
 	progressRadLbl.BackgroundTransparency=1;progressRadLbl.Text="-- · --"
 	progressRadLbl.TextColor3=Color3.fromRGB(190, 190, 190);progressRadLbl.Font=Enum.Font.GothamBold;progressRadLbl.TextSize=10
 	progressRadLbl.TextXAlignment=Enum.TextXAlignment.Center
 	progressRadLbl.ZIndex=4
-	-- Tooze: status state machine — IDLE / READY (in steal range) / STEALING
-	-- READY state pulses the right-side dot and shows distance to the nearest prompt
 	local _pbState = "IDLE"
 	local function setBarState(state, distance)
 		if state == _pbState and state ~= "READY" then return end
@@ -1931,7 +1880,7 @@ local function buildGui()
 				progressPct.Text = distance and (math.floor(distance).."m") or "READY"
 				progressPct.TextColor3 = Color3.fromRGB(235, 235, 235)
 			end
-		else  -- IDLE
+		else
 			TS:Create(stealLbl,   TweenInfo.new(0.2), {TextColor3 = Color3.fromRGB(150, 150, 150)}):Play()
 			TS:Create(fillRegion, TweenInfo.new(0.2), {BackgroundColor3 = Color3.fromRGB(22, 26, 36)}):Play()
 			if progressPct and not isStealing then
@@ -1940,7 +1889,6 @@ local function buildGui()
 			end
 		end
 	end
-	-- scan loop: detects nearby steal prompts and switches the bar between IDLE / READY (always running, independent of auto-steal toggle)
 	task.spawn(function()
 		while task.wait(0.25) do
 			if isStealing then
@@ -1956,7 +1904,6 @@ local function buildGui()
 			end
 		end
 	end)
-	-- live FPS · PING update — reuses the stats loop pattern from the main header
 	task.spawn(function()
 		local lastFrame = tick()
 		local fpsSamples = {}; local fpsAvg = 60
@@ -2067,7 +2014,6 @@ local function buildGui()
 	setIntroVisual = mkToggle("Intro", function(on) _introEnabled = on; saveConfig() end)
 	if setIntroVisual then setIntroVisual(_introEnabled) end
 
-	-- NEW: Lock Buttons
 	setLockGuiVisual = mkToggle("Lock Buttons", function(on)
 		_guiLocked = on
 		saveConfig()
@@ -2127,7 +2073,7 @@ local function buildGui()
 		end
 	end)
 	-- ============================================================
-	-- MOBILE BUTTONS (Black buttons that turn red when active)
+	-- MOBILE BUTTONS
 	-- ============================================================
 	local mobileButtons = {}
 	local function makeMobileButton(key, label, onPress)
@@ -2147,11 +2093,10 @@ local function buildGui()
 		stroke.Color = Color3.fromRGB(70, 70, 70)
 		stroke.Thickness = 1
 		stroke.Transparency = 0.4
-		-- Dragging logic with lock support
 		local pressing, dragging = false, false
 		local pressPos, btnStart = nil, nil
 		btn.InputBegan:Connect(function(i)
-			if _guiLocked then return end   -- ← Locked check
+			if _guiLocked then return end
 			if i.UserInputType==Enum.UserInputType.MouseButton1 or i.UserInputType==Enum.UserInputType.Touch then
 				pressing = true; dragging = false; pressPos = i.Position; btnStart = btn.Position
 			end
@@ -2165,7 +2110,7 @@ local function buildGui()
 			end
 		end)
 		UIS.InputChanged:Connect(function(i)
-			if not pressing or _guiLocked then return end   -- ← Locked check
+			if not pressing or _guiLocked then return end
 			if i.UserInputType~=Enum.UserInputType.MouseMovement and i.UserInputType~=Enum.UserInputType.Touch then return end
 			local delta = i.Position - pressPos
 			if not dragging and (math.abs(delta.X)>6 or math.abs(delta.Y)>6) then
@@ -2191,14 +2136,12 @@ local function buildGui()
 		mobileButtons[key] = {btn=btn, setActive=setActive, active=active}
 		return setActive
 	end
-	-- Drop Brainrot
 	makeMobileButton("drop", "DROP\nBR", function()
 		runDrop()
 		local act = mobileButtons["drop"].setActive
 		act(true)
 		task.delay(0.2, function() act(false) end)
 	end)
-	-- Auto Left
 	makeMobileButton("autoLeft", "AUTO\nLEFT", function()
 		if autoLeftEnabled then
 			autoLeftEnabled = false; stopAutoLeft(); if autoLeftSetVisual then autoLeftSetVisual(false) end
@@ -2211,7 +2154,6 @@ local function buildGui()
 		end
 		saveConfig()
 	end)
-	-- Auto Bat
 	makeMobileButton("autoBat", "BAT\nBOT", function()
 		if autoBatEnabled then
 			autoBatEnabled = false; disableAutoBat(); if autoBatSetVisual then autoBatSetVisual(false) end
@@ -2224,7 +2166,6 @@ local function buildGui()
 		end
 		saveConfig()
 	end)
-	-- Auto Right
 	makeMobileButton("autoRight", "AUTO\nRIGHT", function()
 		if autoRightEnabled then
 			autoRightEnabled = false; stopAutoRight(); if autoRightSetVisual then autoRightSetVisual(false) end
@@ -2237,14 +2178,12 @@ local function buildGui()
 		end
 		saveConfig()
 	end)
-	-- TP Down
 	makeMobileButton("tp", "TP\nDOWN", function()
 		runTPFloor()
 		local act = mobileButtons["tp"].setActive
 		act(true)
 		task.delay(0.2, function() act(false) end)
 	end)
-	-- Tooze: 3 speed buttons — radio behavior (only one active at a time)
 	local function _refreshSpeedRadios()
 		local isCarry       = (not laggerToggled) and speedMode
 		local isLaggerNorm  = laggerToggled and laggerPhase == 1
@@ -2283,7 +2222,6 @@ local function buildGui()
 		_refreshSpeedRadios()
 		saveConfig()
 	end)
-	-- Position buttons (right side)
 	if mobileButtons["drop"] then mobileButtons["drop"].btn.Position = UDim2.new(1,-176,0.5,-132) end
 	if mobileButtons["autoLeft"] then mobileButtons["autoLeft"].btn.Position = UDim2.new(1,-88,0.5,-132) end
 	if mobileButtons["autoBat"] then mobileButtons["autoBat"].btn.Position = UDim2.new(1,-176,0.5,-64) end
@@ -2292,7 +2230,6 @@ local function buildGui()
 	if mobileButtons["carry"] then mobileButtons["carry"].btn.Position = UDim2.new(1,-88,0.5,4) end
 	if mobileButtons["laggerNormal"] then mobileButtons["laggerNormal"].btn.Position = UDim2.new(1,-176,0.5,72) end
 	if mobileButtons["laggerCarry"] then mobileButtons["laggerCarry"].btn.Position = UDim2.new(1,-88,0.5,72) end
-	-- Sync loop to keep mobile buttons' active states in sync with internal variables
 	task.spawn(function()
 		while true do
 			task.wait(0.5)
@@ -2304,7 +2241,6 @@ local function buildGui()
 			if mobileButtons["laggerCarry"] then mobileButtons["laggerCarry"].setActive(laggerToggled and laggerPhase == 2) end
 		end
 	end)
-	-- Tooze: CINEMATIC INTRO (4.0s) — falling moon, drifting starfield, glitch title
 	if _introEnabled then
 		local origSize = main.Size
 		main.Size = UDim2.new(0, 0, 0, 0)
@@ -2314,27 +2250,21 @@ local function buildGui()
 			introGui.IgnoreGuiInset = true
 			introGui.DisplayOrder = 100
 			introGui.ResetOnSpawn = false
-			-- Dark space background (transparent so game shows behind)
 			local darkBg = Instance.new("Frame", introGui)
 			darkBg.Size = UDim2.new(1, 0, 1, 0)
 			darkBg.BackgroundColor3 = Color3.fromRGB(2, 4, 14)
 			darkBg.BackgroundTransparency = 1
 			darkBg.BorderSizePixel = 0
 			darkBg.ZIndex = 1
-			-- Vertical gradient: lighter at top (where moon is) → darker at bottom
 			local bgGrad = Instance.new("UIGradient", darkBg)
 			bgGrad.Color = ColorSequence.new(Color3.fromRGB(8, 12, 30), Color3.fromRGB(0, 0, 4))
 			bgGrad.Rotation = 90
-			-- =========================================================
-			-- BIG MOON (starts above screen, "falls" into view)
-			-- =========================================================
 			local moonContainer = Instance.new("Frame", introGui)
 			moonContainer.Size = UDim2.new(0, 140, 0, 140)
 			moonContainer.AnchorPoint = Vector2.new(0.5, 0.5)
 			moonContainer.Position = UDim2.new(0.78, 0, -0.3, 0)
 			moonContainer.BackgroundTransparency = 1
 			moonContainer.ZIndex = 3
-			-- Outer glow (large soft circle behind moon)
 			local moonGlow = Instance.new("Frame", moonContainer)
 			moonGlow.Size = UDim2.new(2.2, 0, 2.2, 0)
 			moonGlow.AnchorPoint = Vector2.new(0.5, 0.5)
@@ -2344,7 +2274,6 @@ local function buildGui()
 			moonGlow.BorderSizePixel = 0
 			moonGlow.ZIndex = 2
 			Instance.new("UICorner", moonGlow).CornerRadius = UDim.new(1, 0)
-			-- Inner glow (closer halo)
 			local moonHalo = Instance.new("Frame", moonContainer)
 			moonHalo.Size = UDim2.new(1.4, 0, 1.4, 0)
 			moonHalo.AnchorPoint = Vector2.new(0.5, 0.5)
@@ -2354,7 +2283,6 @@ local function buildGui()
 			moonHalo.BorderSizePixel = 0
 			moonHalo.ZIndex = 3
 			Instance.new("UICorner", moonHalo).CornerRadius = UDim.new(1, 0)
-			-- Moon body
 			local moon = Instance.new("Frame", moonContainer)
 			moon.Size = UDim2.new(1, 0, 1, 0)
 			moon.BackgroundColor3 = Color3.fromRGB(240, 240, 230)
@@ -2362,11 +2290,9 @@ local function buildGui()
 			moon.BorderSizePixel = 0
 			moon.ZIndex = 4
 			Instance.new("UICorner", moon).CornerRadius = UDim.new(1, 0)
-			-- 3D shading gradient
 			local moonGrad = Instance.new("UIGradient", moon)
 			moonGrad.Color = ColorSequence.new(Color3.fromRGB(255, 255, 240), Color3.fromRGB(150, 155, 170))
 			moonGrad.Rotation = 135
-			-- Craters
 			local craterData = {{0.25, 0.22, 22}, {0.58, 0.38, 12}, {0.6, 0.68, 16}, {0.32, 0.7, 9}}
 			local craters = {}
 			for i, cd in ipairs(craterData) do
@@ -2380,9 +2306,6 @@ local function buildGui()
 				Instance.new("UICorner", c).CornerRadius = UDim.new(1, 0)
 				craters[i] = c
 			end
-			-- =========================================================
-			-- STARS (60 stars that ACTUALLY DRIFT across the screen)
-			-- =========================================================
 			local stars = {}
 			for i = 1, 60 do
 				local s = Instance.new("Frame", introGui)
@@ -2401,7 +2324,6 @@ local function buildGui()
 					targetTrans = 0.05 + math.random() * 35/100,
 				}
 			end
-			-- Drift loop — moves stars LEFTWARD continuously (parallax space feel)
 			local introActive = true
 			local driftConn = RunService.Heartbeat:Connect(function(dt)
 				if not introActive then return end
@@ -2412,7 +2334,6 @@ local function buildGui()
 					sd.frame.Position = UDim2.new(newX, 0, pos.Y.Scale, pos.Y.Offset)
 				end
 			end)
-			-- Title container
 			local center = Instance.new("Frame", introGui)
 			center.AnchorPoint = Vector2.new(0.5, 0.5)
 			center.Position = UDim2.new(0.5, 0, 0.5, 0)
@@ -2439,7 +2360,6 @@ local function buildGui()
 			lineBot.AnchorPoint = Vector2.new(0.5, 1); lineBot.Position = UDim2.new(0.5, 0, 1, -10)
 			lineBot.Size = UDim2.new(0, 0, 0, 2); lineBot.BackgroundColor3 = THEME_ACCENT
 			lineBot.BorderSizePixel = 0; lineBot.ZIndex = 6
-			-- Shooting star (single dramatic streak)
 			local shootStar = Instance.new("Frame", introGui)
 			shootStar.Size = UDim2.new(0, 100, 0, 2)
 			shootStar.AnchorPoint = Vector2.new(0.5, 0.5)
@@ -2449,9 +2369,6 @@ local function buildGui()
 			shootStar.Rotation = 20; shootStar.ZIndex = 3
 			local shootGlow = Instance.new("UIStroke", shootStar)
 			shootGlow.Color = Color3.fromRGB(255, 255, 240); shootGlow.Thickness = 4; shootGlow.Transparency = 0.5
-			-- =========================================================
-			-- PHASE 1 (0.0 - 0.6s): Space background + stars fade in
-			-- =========================================================
 			TS:Create(darkBg, TweenInfo.new(0.5), {BackgroundTransparency = 0.5}):Play()
 			for i, sd in ipairs(stars) do
 				task.delay(math.random()*60/100, function()
@@ -2459,18 +2376,12 @@ local function buildGui()
 				end)
 			end
 			task.wait(0.6)
-			-- =========================================================
-			-- PHASE 2 (0.6 - 1.8s): MOON FALLS dramatically from top with glow
-			-- =========================================================
 			TS:Create(moonContainer, TweenInfo.new(1.2, Enum.EasingStyle.Quart, Enum.EasingDirection.Out), {Position = UDim2.new(0.78, 0, 0.24, 0)}):Play()
 			TS:Create(moon, TweenInfo.new(0.8, Enum.EasingStyle.Quad), {BackgroundTransparency = 0}):Play()
 			TS:Create(moonHalo, TweenInfo.new(1), {BackgroundTransparency = 0.55}):Play()
 			TS:Create(moonGlow, TweenInfo.new(1.2), {BackgroundTransparency = 0.78}):Play()
 			for _, c in ipairs(craters) do TS:Create(c, TweenInfo.new(1), {BackgroundTransparency = 0.4}):Play() end
 			task.wait(1.2)
-			-- =========================================================
-			-- PHASE 3 (1.8 - 2.6s): Title reveal + shooting star
-			-- =========================================================
 			task.spawn(function()
 				TS:Create(shootStar, TweenInfo.new(0.06), {BackgroundTransparency = 0.1}):Play()
 				TS:Create(shootStar, TweenInfo.new(0.7, Enum.EasingStyle.Quint, Enum.EasingDirection.Out), {Position = UDim2.new(1.1, 0, 0.42, 0)}):Play()
@@ -2482,9 +2393,6 @@ local function buildGui()
 			task.wait(0.15)
 			TS:Create(title, TweenInfo.new(0.55, Enum.EasingStyle.Quart, Enum.EasingDirection.Out), {TextTransparency = 0, TextStrokeTransparency = 0.3}):Play()
 			task.wait(0.55)
-			-- =========================================================
-			-- PHASE 4 (2.6 - 3.3s): Subtitle + glitch flashes
-			-- =========================================================
 			TS:Create(subtitle, TweenInfo.new(0.45), {TextTransparency = 0}):Play()
 			task.wait(0.25)
 			for i = 1, 3 do
@@ -2494,9 +2402,6 @@ local function buildGui()
 				task.wait(0.07)
 			end
 			task.wait(0.15)
-			-- =========================================================
-			-- PHASE 5 (3.3 - 4.0s): Everything fades, panel materializes
-			-- =========================================================
 			TS:Create(center, TweenInfo.new(0.4, Enum.EasingStyle.Quart, Enum.EasingDirection.In), {Size = UDim2.new(0, 0, 0, 0)}):Play()
 			TS:Create(title, TweenInfo.new(0.4), {TextTransparency = 1, TextStrokeTransparency = 1}):Play()
 			TS:Create(subtitle, TweenInfo.new(0.35), {TextTransparency = 1}):Play()
@@ -2578,7 +2483,6 @@ local function loadConfigState()
 			pcall(function() if setAccent_global then setAccent_global(Color3.new(cfg.themeAccent[1], cfg.themeAccent[2], cfg.themeAccent[3])) end end)
 		end
 		if cfg.sidebarArt and type(cfg.sidebarArt)=="string" then
-			if cfg.sidebarArt == "111817612356516" or cfg.sidebarArt == "115117078011241" then cfg.sidebarArt = "82028776918457" end
 			pcall(function() if setSidebarArt_global then setSidebarArt_global(cfg.sidebarArt) end end)
 		end
 		if cfg.playerESP then
