@@ -2133,24 +2133,25 @@ local function buildGui()
 	local function makeMobileButton(key, label, onPress)
 		local btn = Instance.new("TextButton", gui)
 		btn.Name = "MB_"..key
-		btn.Size = UDim2.new(0, 76, 0, 56)                        -- Tooze: slightly smaller for clean look
-		btn.BackgroundColor3 = Color3.fromRGB(10, 10, 10)          -- Tooze: blue-tinted black (matches main panel)
+		btn.Size = UDim2.new(0, 76, 0, 56)
+		btn.BackgroundColor3 = Color3.fromRGB(10, 10, 10)
 		btn.BorderSizePixel = 0
 		btn.Text = label
-		btn.TextColor3 = Color3.fromRGB(225, 225, 225)            -- Tooze: subtle off-white
+		btn.TextColor3 = Color3.fromRGB(225, 225, 225)
 		btn.Font = Enum.Font.GothamBlack
 		btn.TextSize = 11
 		btn.AutoButtonColor = false
 		btn.ZIndex = 101
-		Instance.new("UICorner", btn).CornerRadius = UDim.new(0, 10)  -- Tooze: more rounded
+		Instance.new("UICorner", btn).CornerRadius = UDim.new(0, 10)
 		local stroke = Instance.new("UIStroke", btn)
-		stroke.Color = Color3.fromRGB(70, 70, 70)                -- Tooze: subtle blue idle stroke
+		stroke.Color = Color3.fromRGB(70, 70, 70)
 		stroke.Thickness = 1
 		stroke.Transparency = 0.4
-		-- Dragging logic (prevents accidental press if moved)
+		-- Dragging logic with lock support
 		local pressing, dragging = false, false
 		local pressPos, btnStart = nil, nil
 		btn.InputBegan:Connect(function(i)
+			if _guiLocked then return end   -- ← Locked check
 			if i.UserInputType==Enum.UserInputType.MouseButton1 or i.UserInputType==Enum.UserInputType.Touch then
 				pressing = true; dragging = false; pressPos = i.Position; btnStart = btn.Position
 			end
@@ -2164,7 +2165,7 @@ local function buildGui()
 			end
 		end)
 		UIS.InputChanged:Connect(function(i)
-			if not pressing then return end
+			if not pressing or _guiLocked then return end   -- ← Locked check
 			if i.UserInputType~=Enum.UserInputType.MouseMovement and i.UserInputType~=Enum.UserInputType.Touch then return end
 			local delta = i.Position - pressPos
 			if not dragging and (math.abs(delta.X)>6 or math.abs(delta.Y)>6) then
@@ -2178,11 +2179,11 @@ local function buildGui()
 		local function setActive(state)
 			active = state
 			TS:Create(btn, TweenInfo.new(0.18), {
-				BackgroundColor3 = state and THEME_ACCENT or Color3.fromRGB(10, 10, 10),  -- Tooze: BLUE on, dark off
+				BackgroundColor3 = state and THEME_ACCENT or Color3.fromRGB(10, 10, 10),
 				TextColor3 = state and Color3.fromRGB(255,255,255) or Color3.fromRGB(225, 225, 225),
 			}):Play()
 			TS:Create(stroke, TweenInfo.new(0.18), {
-				Color = state and Color3.fromRGB(235, 235, 235) or Color3.fromRGB(70, 70, 70),  -- Tooze: brighter blue when active
+				Color = state and Color3.fromRGB(235, 235, 235) or Color3.fromRGB(70, 70, 70),
 				Transparency = state and 0 or 0.4,
 			}):Play()
 		end
@@ -2254,7 +2255,7 @@ local function buildGui()
 	end
 	makeMobileButton("carry", "CARRY\nSPEED", function()
 		if speedMode and not laggerToggled then
-			speedMode = false  -- toggle off → normal walk
+			speedMode = false
 		else
 			speedMode = true; laggerToggled = false; laggerPhase = 0
 		end
@@ -2396,8 +2397,8 @@ local function buildGui()
 				stars[i] = {
 					frame = s,
 					baseSize = size,
-					speed = 0.005 + math.random() * 25/1000,  -- 0.005 - 0.030 per frame
-					targetTrans = 0.05 + math.random() * 35/100,  -- final brightness
+					speed = 0.005 + math.random() * 25/1000,
+					targetTrans = 0.05 + math.random() * 35/100,
 				}
 			end
 			-- Drift loop — moves stars LEFTWARD continuously (parallax space feel)
@@ -2451,7 +2452,7 @@ local function buildGui()
 			-- =========================================================
 			-- PHASE 1 (0.0 - 0.6s): Space background + stars fade in
 			-- =========================================================
-			TS:Create(darkBg, TweenInfo.new(0.5), {BackgroundTransparency = 0.5}):Play()  -- TRANSPARENT (game visible)
+			TS:Create(darkBg, TweenInfo.new(0.5), {BackgroundTransparency = 0.5}):Play()
 			for i, sd in ipairs(stars) do
 				task.delay(math.random()*60/100, function()
 					TS:Create(sd.frame, TweenInfo.new(0.4 + math.random()*4/10), {BackgroundTransparency = sd.targetTrans}):Play()
@@ -2570,7 +2571,7 @@ local function loadConfigState()
 		if cfg.removeAccessories then enableRemoveAccessories();if V.setRemoveAccVisual then V.setRemoveAccVisual(true) end end
 		if cfg.customFontEnabled then task.spawn(function() task.wait(1);enableCustomFont() end);if V.setCustomFontVisual then V.setCustomFontVisual(true) end end
 		if cfg.potatoGraphics then enablePotatoGraphics();if V.setPotatoVisual then V.setPotatoVisual(true) end end
-		if cfg.autoSave ~= nil then V.autoSaveEnabled=cfg.autoSave end  -- legacy field — auto-save is now always-on
+		if cfg.autoSave ~= nil then V.autoSaveEnabled=cfg.autoSave end
 		if cfg.lockGui ~= nil then _guiLocked=cfg.lockGui==true; if setLockGuiVisual then setLockGuiVisual(_guiLocked) end end
 		if cfg.introEnabled ~= nil then _introEnabled=cfg.introEnabled==true; if setIntroVisual then setIntroVisual(_introEnabled) end end
 		if cfg.themeAccent and type(cfg.themeAccent)=="table" and #cfg.themeAccent==3 then
