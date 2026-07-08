@@ -40,7 +40,7 @@ local V = {
 	potatoGraphicsEnabled=false, setPotatoVisual=nil, potatoConn=nil,
 	autoSaveEnabled=true, setAutoSaveVisual=nil,
 	themeAccent=nil,  -- {R,G,B} 0-1 floats; nil = default blue
-	sidebarArt="1cxV5",  -- ← NEW DEXTER IMAGE
+	sidebarArt="109196688369098",  -- ← NEW DEXTER IMAGE
 }
 local setAccent_global = nil
 local setSidebarArt_global = nil
