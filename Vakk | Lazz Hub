@@ -1327,6 +1327,9 @@ local function buildGui()
 				i.Changed:Connect(function() if i.UserInputState==Enum.UserInputState.End then dn=false end end)
 			end
 		end)
+f.InputBegan:Connect(function(i)
+    if _guiLocked then return end   -- ← This line was added/updated
+    if i.UserInputType==Enum.UserInputType.MouseButton1 or i.UserInputType==Enum.UserInputType.Touch then
 		f.InputChanged:Connect(function(i)
 			if i.UserInputType==Enum.UserInputType.MouseMovement or i.UserInputType==Enum.UserInputType.Touch then di=i end
 		end)
@@ -2066,6 +2069,16 @@ local function buildGui()
 	do local row=mkRow(40);mkLabel(row,"Hide GUI");mkKB(row,KB.GuiHide,function(k,isGp) if isGp then KB.GuiHide.gp=k;KB.GuiHide.kb=nil else KB.GuiHide.kb=k;KB.GuiHide.gp=nil end;saveConfig() end) end
 	setIntroVisual = mkToggle("Intro", function(on) _introEnabled = on; saveConfig() end)
 	if setIntroVisual then setIntroVisual(_introEnabled) end
+
+		setIntroVisual = mkToggle("Intro", function(on) _introEnabled = on; saveConfig() end)
+if setIntroVisual then setIntroVisual(_introEnabled) end
+
+-- NEW Lock Buttons toggle
+setLockGuiVisual = mkToggle("Lock Buttons", function(on)
+    _guiLocked = on
+    saveConfig()
+end)
+if setLockGuiVisual then setLockGuiVisual(_guiLocked) end
 
 	mkSect("Grab Radius")
 	do local row=mkRow(40);mkLabel(row,"Grab Radius");radInput=mkBox(row,Steal.StealRadius,64,72,function(v) if v>=0.5 and v<=300 then Steal.StealRadius=v;if progressRadLbl then progressRadLbl.Text=string.format("Radius: %.2g",Steal.StealRadius) end;Steal.cachedPrompts={};Steal.promptCacheTime=0 end;saveConfig() end) end
