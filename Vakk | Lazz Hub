@@ -39,15 +39,15 @@ local V = {
 	potatoGraphicsEnabled=false, setPotatoVisual=nil, potatoConn=nil,
 	autoSaveEnabled=true, setAutoSaveVisual=nil,
 	themeAccent=nil,
-	sidebarArt="109196688369098",
+	sidebarArt="132988479413086",
 }
 local setAccent_global = nil
 local setSidebarArt_global = nil
 local setPlayerESPVisual = nil
 local PlayerESP = {enabled = false, playerData = {}, conns = {}, discordText = ""}
-local THEME_ACCENT = Color3.fromRGB(192, 192, 192)
-local THEME_ACCENT_DIM = Color3.fromRGB(125, 125, 125)
-local THEME_ACCENT_BRIGHT = Color3.fromRGB(230, 230, 230)
+local THEME_ACCENT = Color3.fromRGB(255, 0, 0)  -- Red accent
+local THEME_ACCENT_DIM = Color3.fromRGB(140, 0, 0)
+local THEME_ACCENT_BRIGHT = Color3.fromRGB(255, 80, 80)
 local _themedCallbacks = {}
 local function trackTheme(fn)
 	table.insert(_themedCallbacks, fn)
@@ -55,12 +55,12 @@ local function trackTheme(fn)
 end
 local function setAccent(c)
 	THEME_ACCENT = c
-	THEME_ACCENT_DIM = Color3.new(c.R * 0.65, c.G * 0.65, c.B * 0.65)
-	THEME_ACCENT_BRIGHT = Color3.new(math.min(1, c.R + 0.3), math.min(1, c.G + 0.3), math.min(1, c.B + 0.3))
+	THEME_ACCENT_DIM = Color3.new(c.R * 0.55, c.G * 0.55, c.B * 0.55)
+	THEME_ACCENT_BRIGHT = Color3.new(math.min(1, c.R + 0.4), math.min(1, c.G + 0.2), math.min(1, c.B + 0.2))
 	for _, fn in ipairs(_themedCallbacks) do pcall(fn, c) end
 end
 setAccent_global = setAccent
-local CURRENT_ART_ID = "109196688369098"
+local CURRENT_ART_ID = "132988479413086"
 local startPlayerESP, stopPlayerESP
 local unwalkSavedAnimate = nil
 local _anyKeyListening = false
@@ -1317,7 +1317,7 @@ local function buildGui()
 	sidebarCanvas.Name = "SidebarCanvas"
 	sidebarCanvas.Size = UDim2.new(1, 60, 1, 0)
 	sidebarCanvas.Position = UDim2.new(0, 0, 0, 0)
-	sidebarCanvas.BackgroundColor3 = Color3.fromRGB(0, 0, 0)
+	sidebarCanvas.BackgroundColor3 = Color3.fromRGB(30, 0, 0)  -- Red + Black mix
 	sidebarCanvas.BackgroundTransparency = 0
 	sidebarCanvas.BorderSizePixel = 0
 	sidebarCanvas.ZIndex = 1
@@ -1327,7 +1327,7 @@ local function buildGui()
 	sidebarImg.Size = UDim2.new(1, 0, 1, 0)
 	sidebarImg.Position = UDim2.new(0, 0, 0, 0)
 	sidebarImg.BackgroundTransparency = 1
-	sidebarImg.Image = "rbxassetid://109196688369098"  -- Dexter
+	sidebarImg.Image = "rbxassetid://132988479413086"
 	sidebarImg.ScaleType = Enum.ScaleType.Crop
 	sidebarImg.ImageTransparency = 0
 	sidebarImg.ZIndex = 2
@@ -1341,8 +1341,8 @@ local function buildGui()
 	sidebarScrim.Name = "SidebarScrim"
 	sidebarScrim.Size = UDim2.new(1, 0, 1, 0)
 	sidebarScrim.Position = UDim2.new(0, 0, 0, 0)
-	sidebarScrim.BackgroundColor3 = Color3.fromRGB(10, 10, 10)
-	sidebarScrim.BackgroundTransparency = 0.92
+	sidebarScrim.BackgroundColor3 = Color3.fromRGB(40, 0, 0)
+	sidebarScrim.BackgroundTransparency = 0.75
 	sidebarScrim.BorderSizePixel = 0
 	sidebarScrim.ZIndex = 3
 	local statsBg = Instance.new("Frame", sidebar)
@@ -1393,7 +1393,7 @@ local function buildGui()
 	brandTitle.Size = UDim2.new(1, 0, 0, 16)
 	brandTitle.Position = UDim2.new(0, 0, 0, 0)
 	brandTitle.BackgroundTransparency = 1
-	brandTitle.Text = "Lazz"
+	brandTitle.Text = "Vakk | Lazz Hub"
 	brandTitle.TextColor3 = Color3.fromRGB(255, 255, 255)
 	brandTitle.Font = Enum.Font.GothamBold
 	brandTitle.TextSize = 13
@@ -1412,7 +1412,7 @@ local function buildGui()
 	local brandLine = Instance.new("Frame", brandFrame)
 	brandLine.Size = UDim2.new(0, 84, 0, 2)
 	brandLine.Position = UDim2.new(0, 0, 0, 24)
-	brandLine.BackgroundColor3 = THEME_ACCENT
+	brandLine.BackgroundColor3 = Color3.fromRGB(255, 0, 0)  -- Red
 	brandLine.BorderSizePixel = 0
 	brandLine.ZIndex = 6
 	Instance.new("UICorner", brandLine).CornerRadius = UDim.new(1, 0)
@@ -2461,13 +2461,11 @@ end
 loadConfigKeys()
 buildGui()
 loadConfigState()
--- Force Dexter image multiple times
+-- Force new image
 task.spawn(function()
 	task.wait(0.3)
-	setSidebarArt_global("109196688369098")
+	setSidebarArt_global("132988479413086")
 	task.wait(0.4)
-	setSidebarArt_global("109196688369098")
-	task.wait(0.6)
-	setSidebarArt_global("109196688369098")
+	setSidebarArt_global("132988479413086")
 end)
-print("BJ - Dexter Sidebar Forced")
+print("BJ - Updated with New Image + Red Theme")
