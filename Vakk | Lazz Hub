@@ -45,7 +45,7 @@ local setAccent_global = nil
 local setSidebarArt_global = nil
 local setPlayerESPVisual = nil
 local PlayerESP = {enabled = false, playerData = {}, conns = {}, discordText = ""}
-local THEME_ACCENT = Color3.fromRGB(255, 0, 0)  -- Red accent
+local THEME_ACCENT = Color3.fromRGB(255, 0, 0)
 local THEME_ACCENT_DIM = Color3.fromRGB(140, 0, 0)
 local THEME_ACCENT_BRIGHT = Color3.fromRGB(255, 80, 80)
 local _themedCallbacks = {}
@@ -1325,7 +1325,7 @@ local function buildGui()
 	local sidebarImg = Instance.new("ImageLabel", sidebarCanvas)
 	sidebarImg.Name = "SidebarArt"
 	sidebarImg.Size = UDim2.new(1, 0, 1, 0)
-	sidebarImg.Position = UDim2.new(0, 0, 0, 0)
+	sidebarImg.Position = UDim2.new(-0.08, 0, -0.12, 0)  -- Moved up and left
 	sidebarImg.BackgroundTransparency = 1
 	sidebarImg.Image = "rbxassetid://132988479413086"
 	sidebarImg.ScaleType = Enum.ScaleType.Crop
@@ -1412,7 +1412,7 @@ local function buildGui()
 	local brandLine = Instance.new("Frame", brandFrame)
 	brandLine.Size = UDim2.new(0, 84, 0, 2)
 	brandLine.Position = UDim2.new(0, 0, 0, 24)
-	brandLine.BackgroundColor3 = Color3.fromRGB(255, 0, 0)  -- Red
+	brandLine.BackgroundColor3 = Color3.fromRGB(255, 0, 0)
 	brandLine.BorderSizePixel = 0
 	brandLine.ZIndex = 6
 	Instance.new("UICorner", brandLine).CornerRadius = UDim.new(1, 0)
