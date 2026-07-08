@@ -30,7 +30,6 @@ local antiLagDescConn = nil
 local stretchRezEnabled = false
 local stretchRezConn = nil
 local setStretchRezVisual = nil
--- All extra Tooze state lives in a single table to save local registers
 local V = {
 	customFovEnabled=false, customFovValue=70, customFovConn=nil, setCustomFovVisual=nil, customFovBox=nil,
 	skyTheme="Off", setSkyVisual=nil, skyValLbl=nil,
@@ -39,8 +38,8 @@ local V = {
 	customFontEnabled=false, setCustomFontVisual=nil,
 	potatoGraphicsEnabled=false, setPotatoVisual=nil, potatoConn=nil,
 	autoSaveEnabled=true, setAutoSaveVisual=nil,
-	themeAccent=nil,  -- {R,G,B} 0-1 floats; nil = default blue
-	sidebarArt="109196688369098",  -- ← NEW DEXTER IMAGE
+	themeAccent=nil,
+	sidebarArt="109196688369098",  -- Dexter image
 }
 local setAccent_global = nil
 local setSidebarArt_global = nil
@@ -61,10 +60,7 @@ local function setAccent(c)
 	for _, fn in ipairs(_themedCallbacks) do pcall(fn, c) end
 end
 setAccent_global = setAccent
-local SIDEBAR_ART_PRESETS = {
-	{name = "Dexter", id = "1cxV5"},
-}
-local CURRENT_ART_ID = "1cxV5"
+local CURRENT_ART_ID = "109196688369098"
 local startPlayerESP, stopPlayerESP
 local unwalkSavedAnimate = nil
 local _anyKeyListening = false
@@ -187,7 +183,6 @@ local function isRagdollState(hum)
 	local st=hum:GetState()
 	return hum.PlatformStand or st==Enum.HumanoidStateType.Physics or st==Enum.HumanoidStateType.Ragdoll or st==Enum.HumanoidStateType.FallingDown
 end
-
 local function isMyPlotByName(plotName)
 	local plots=workspace:FindFirstChild("Plots")
 	if not plots then return false end
@@ -206,12 +201,7 @@ local function resetProgressBar()
 	if progressPct then progressPct.Text="0%" end
 	if progressFill then progressFill.Size=UDim2.new(0,0,1,0) end
 end
--- ════════════════════════════════════════════════════════════════
--- AUTO STEAL — cr2123 style (NO teleport, NO turbo modifications,
--- proper plot+prompt cache, cooldown, 3-tier fallback firing)
--- ════════════════════════════════════════════════════════════════
 local nearestPromptCache, nearestPromptDist = nil, math.huge
-
 local function findNearestPrompt()
 	local c = LP.Character; if not c then return nil, math.huge end
 	local root = c:FindFirstChild("HumanoidRootPart"); if not root then return nil, math.huge end
@@ -254,7 +244,6 @@ local function findNearestPrompt()
 	end
 	return np, nd
 end
-
 local function executeSteal(prompt)
 	local ct = tick()
 	if ct - lastStealTick < STEAL_COOLDOWN then return end
@@ -311,7 +300,6 @@ local function executeSteal(prompt)
 		isStealing = false
 	end)
 end
-
 local function startAutoSteal()
 	if Conns.autoSteal then return end
 	Conns.autoSteal = RunService.Heartbeat:Connect(function()
@@ -473,9 +461,6 @@ end
 local function stopAntiRagdoll()
 	if Conns.antiRag then Conns.antiRag:Disconnect();Conns.antiRag=nil end
 end
--- =========================================================
--- PLAYER ESP — highlight + name + speed above each other player's head
--- =========================================================
 do
 	local function _espCleanupPlayer(player)
 		local d = PlayerESP.playerData[player]
@@ -594,9 +579,6 @@ local function stopUnwalk()
 	local c=LP.Character
 	if c and unwalkSavedAnimate then unwalkSavedAnimate:Clone().Parent=c;unwalkSavedAnimate=nil end
 end
--- ============================================================
--- DROP BRAINROT
--- ============================================================
 local DROP_ASCEND_DURATION, DROP_ASCEND_SPEED = 0.2, 150
 local function runDrop()
 	if dropActive then return end
@@ -1331,7 +1313,6 @@ local function buildGui()
 	sidebar.ZIndex = 3
 	sidebar.ClipsDescendants = true
 	Instance.new("UICorner", sidebar).CornerRadius = UDim.new(0, 30)
-
 	local sidebarCanvas = Instance.new("CanvasGroup", sidebar)
 	sidebarCanvas.Name = "SidebarCanvas"
 	sidebarCanvas.Size = UDim2.new(1, 60, 1, 0)
@@ -1341,24 +1322,21 @@ local function buildGui()
 	sidebarCanvas.BorderSizePixel = 0
 	sidebarCanvas.ZIndex = 1
 	Instance.new("UICorner", sidebarCanvas).CornerRadius = UDim.new(0, 30)
-
 	local sidebarImg = Instance.new("ImageLabel", sidebarCanvas)
 	sidebarImg.Name = "SidebarArt"
 	sidebarImg.Size = UDim2.new(1, 0, 1, 0)
 	sidebarImg.Position = UDim2.new(0, 0, 0, 0)
 	sidebarImg.BackgroundTransparency = 1
-	sidebarImg.Image = "rbxassetid://" .. CURRENT_ART_ID   -- Dexter image
+	sidebarImg.Image = "rbxassetid://109196688369098"  -- Dexter image
 	sidebarImg.ScaleType = Enum.ScaleType.Crop
 	sidebarImg.ImageTransparency = 0
 	sidebarImg.ZIndex = 2
-
 	local function setSidebarArt(id)
 		CURRENT_ART_ID = id
 		sidebarImg.Image = "rbxassetid://" .. tostring(id)
 		V.sidebarArt = tostring(id)
 	end
 	setSidebarArt_global = setSidebarArt
-
 	local sidebarScrim = Instance.new("Frame", sidebarCanvas)
 	sidebarScrim.Name = "SidebarScrim"
 	sidebarScrim.Size = UDim2.new(1, 0, 1, 0)
@@ -1367,7 +1345,6 @@ local function buildGui()
 	sidebarScrim.BackgroundTransparency = 0.92
 	sidebarScrim.BorderSizePixel = 0
 	sidebarScrim.ZIndex = 3
-
 	local statsBg = Instance.new("Frame", sidebar)
 	statsBg.Size = UDim2.new(0, 96, 0, 20)
 	statsBg.Position = UDim2.new(0, 8, 0, 8)
@@ -1388,7 +1365,6 @@ local function buildGui()
 	statsLbl.ZIndex = 5
 	statsLbl.BackgroundTransparency = 1
 	trackTheme(function(c) statsLbl.TextColor3 = c end)
-
 	local statsLine = Instance.new("Frame", sidebar)
 	statsLine.Size = UDim2.new(0, 42, 0, 1)
 	statsLine.Position = UDim2.new(0, 12, 0, 29)
@@ -1397,7 +1373,6 @@ local function buildGui()
 	statsLine.BorderSizePixel = 0
 	statsLine.ZIndex = 5
 	trackTheme(function(c) statsLine.BackgroundColor3 = c end)
-
 	local tabContainer = Instance.new("Frame", sidebar)
 	tabContainer.Size = UDim2.new(0, 122, 0, 226)
 	tabContainer.AnchorPoint = Vector2.new(0.5, 0.5)
@@ -1409,7 +1384,6 @@ local function buildGui()
 	tabLayout.Padding = UDim.new(0, 40)
 	tabLayout.HorizontalAlignment = Enum.HorizontalAlignment.Center
 	tabLayout.VerticalAlignment = Enum.VerticalAlignment.Center
-
 	local brandFrame = Instance.new("Frame", sidebar)
 	brandFrame.Size = UDim2.new(1, -24, 0, 54)
 	brandFrame.Position = UDim2.new(0, 12, 1, -58)
@@ -1443,7 +1417,6 @@ local function buildGui()
 	brandLine.ZIndex = 6
 	Instance.new("UICorner", brandLine).CornerRadius = UDim.new(1, 0)
 	trackTheme(function(c) brandLine.BackgroundColor3 = c end)
-
 	local closeBtn = Instance.new("TextButton", main)
 	closeBtn.Size = UDim2.new(0, 24, 0, 24)
 	closeBtn.Position = UDim2.new(1, -34, 0, 16)
@@ -1466,7 +1439,6 @@ local function buildGui()
 		TS:Create(closeBtn,TweenInfo.new(0.1),{TextColor3=Color3.fromRGB(200,200,200),BackgroundColor3=Color3.fromRGB(14,14,14),BackgroundTransparency=0.15}):Play()
 		TS:Create(closeStroke,TweenInfo.new(0.1),{Transparency=0.45}):Play()
 	end)
-
 	task.spawn(function()
 		local lastFrame = tick()
 		local fpsSamples = {}; local fpsAvg = 60
@@ -1489,7 +1461,6 @@ local function buildGui()
 			task.wait(0.5)
 		end
 	end)
-
 	local miniBtn=Instance.new("TextButton",gui)
 	miniBtn.Size=UDim2.new(0,118,0,30);miniBtn.Position=UDim2.new(1,-144,0,26)
 	miniBtn.BackgroundColor3=Color3.fromRGB(14, 14, 14);miniBtn.BorderSizePixel=0
@@ -2072,9 +2043,6 @@ local function buildGui()
 		elseif kbMatch(KB.GuiHide,kc) then if main.Visible then hideGui() else showGui() end
 		end
 	end)
-	-- ============================================================
-	-- MOBILE BUTTONS
-	-- ============================================================
 	local mobileButtons = {}
 	local function makeMobileButton(key, label, onPress)
 		local btn = Instance.new("TextButton", gui)
