@@ -39,7 +39,7 @@ local V = {
 	potatoGraphicsEnabled=false, setPotatoVisual=nil, potatoConn=nil,
 	autoSaveEnabled=true, setAutoSaveVisual=nil,
 	themeAccent=nil,
-	sidebarArt="109196688369098",  -- Dexter image
+	sidebarArt="109196688369098",
 }
 local setAccent_global = nil
 local setSidebarArt_global = nil
@@ -1327,7 +1327,7 @@ local function buildGui()
 	sidebarImg.Size = UDim2.new(1, 0, 1, 0)
 	sidebarImg.Position = UDim2.new(0, 0, 0, 0)
 	sidebarImg.BackgroundTransparency = 1
-	sidebarImg.Image = "rbxassetid://109196688369098"  -- Dexter image
+	sidebarImg.Image = "rbxassetid://109196688369098"  -- Dexter
 	sidebarImg.ScaleType = Enum.ScaleType.Crop
 	sidebarImg.ImageTransparency = 0
 	sidebarImg.ZIndex = 2
@@ -2461,4 +2461,13 @@ end
 loadConfigKeys()
 buildGui()
 loadConfigState()
-print("BJ")
+-- Force Dexter image multiple times
+task.spawn(function()
+	task.wait(0.3)
+	setSidebarArt_global("109196688369098")
+	task.wait(0.4)
+	setSidebarArt_global("109196688369098")
+	task.wait(0.6)
+	setSidebarArt_global("109196688369098")
+end)
+print("BJ - Dexter Sidebar Forced")
